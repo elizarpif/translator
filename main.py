@@ -9,6 +9,7 @@ import logging
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from translate import Translator
+import config
 
 # Enable logging
 logging.basicConfig(
@@ -88,13 +89,10 @@ def set_base_multi(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Set multi mode')
 
 
-token = '5227080934:AAHxOpHPjfBeTUAd_fu332ap0l3TGKMMtTg'
-
-
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(token)
+    updater = Updater(config.token)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
