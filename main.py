@@ -47,69 +47,108 @@ from_tu_to_ru_translator = Translator(to_lang='ru', from_lang='tr')
 from_ru_to_tu_translator = Translator(to_lang='tr', from_lang='ru')
 
 # 0 - tr-ru, 1 - ru-tr, 2 - multi
-Current_mode = 1
+Current_mode = 0
+Multi = False
 
 
 def switchLang(mode):
-    if mode == 1:
+    if mode == 0:
         return 'tr'
 
     return 'ru'
 
 
+def switch_translator(mode):
+    if mode == 0:
+        return from_ru_to_tu_translator
+
+    return from_tu_to_ru_translator
+
+
 filename = 'voice2.ogg'
 
 
-def voice(text, mode):
-    tts = gTTS(text, lang=switchLang(mode))
+def voice(text):
+    tts = gTTS(text, lang=switchLang(Current_mode))
+    tts.save(filename)
+
+
+def voice_lang(text, lang='tr'):
+    tts = gTTS(text, lang=lang)
     tts.save(filename)
 
 
 # Define a few command handlers. These usually take the two arguments update and
 # context.
+# 0 - rus
+# 1 - tur
+# 2 - multi
+
+ru_lang = 'ru'
+en_lang = 'en'
+
+
+def translate_text(text=''):
+    return switch_translator(Current_mode).translate(text)
+
+
+def multi_translate(update: Update):
+    text = update.message.text
+
+    rutu = from_ru_to_tu_translator.translate(text)
+    turu = from_tu_to_ru_translator.translate(text)
+
+    # делаем озвучку и отправляем ее
+    voice_lang(rutu, 'tr')
+    with open(filename, 'rb') as f:
+        # отправляем
+        update.message.reply_voice(f, caption=rutu)
+
+    # делаем озвучку и отправляем ее
+    voice_lang(turu, 'ru')
+    with open(filename, 'rb') as f:
+        # отправляем
+        update.message.reply_voice(f, caption=turu)
+
+
 def translate(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /turkish"""
-    # update.message.reply_text('set language: turkish')
-    t = update.message.text
+    if Multi:
+        multi_translate(update)
+        return
 
-    rutu = from_ru_to_tu_translator.translate(t)
-    turu = from_tu_to_ru_translator.translate(t)
+    res = translate_text(update.message.text)
 
-    if Current_mode == 0:
-        voice(turu, Current_mode)
-    if Current_mode == 1:
-        voice(rutu, Current_mode)
-
-    switcher = {
-        0: f'{turu}',
-        1: f'{rutu}',
-        2: f'{rutu} (ru-tr)\n\n{turu} (tr-ru)'
-    }
-
-    update.message.reply_text(switcher.get(Current_mode))
+    # делаем озвучку и отправляем ее
+    voice(res)
 
     with open(filename, 'rb') as f:
-        update.message.reply_voice(f, caption='озвучка')
+        # отправляем
+        update.message.reply_voice(f, caption=res)
 
 
 def set_base_turk(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     global Current_mode
-    Current_mode = 0
+    Current_mode = 1
+    global Multi
+    Multi = False
     update.message.reply_text('Set base lang: Turkish')
 
 
 def set_base_ru(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     global Current_mode
-    Current_mode = 1
+    Current_mode = 0
+    global Multi
+    Multi = False
     update.message.reply_text('Set base lang: Russian')
 
 
 def set_base_multi(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    global Current_mode
-    Current_mode = 2
+    global Multi
+    Multi = True
     update.message.reply_text('Set multi mode')
 
 
