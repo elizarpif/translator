@@ -11,6 +11,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 from translate import Translator
 import config
 
+from gtts import gTTS
+
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -23,9 +25,7 @@ logger = logging.getLogger(__name__)
 help_msg = f'/multi - установить мультрежим русский-турецкий ' \
            f'(P.S. иногда перевод языка A->A может приводить к неожиданным результатам)\n' \
            f'/tr - установить переводчик с турецкого на русский ' \
-           f'(работает 2-ная схема: с турецкого на русский и результат - на турецкий снова\n' \
            f'/ru - установить переводчик с русского на турецкий\n' \
-           f'(работает 2-ная схема: с русского на турецкий и результат - на русский снова\n' \
            f'/help - справка'
 
 
@@ -50,6 +50,21 @@ from_ru_to_tu_translator = Translator(to_lang='tr', from_lang='ru')
 Current_mode = 1
 
 
+def switchLang(mode):
+    if mode == 1:
+        return 'tr'
+
+    return 'ru'
+
+
+filename = 'voice2.ogg'
+
+
+def voice(text, mode):
+    tts = gTTS(text, lang=switchLang(mode))
+    tts.save(filename)
+
+
 # Define a few command handlers. These usually take the two arguments update and
 # context.
 def translate(update: Update, context: CallbackContext) -> None:
@@ -60,12 +75,21 @@ def translate(update: Update, context: CallbackContext) -> None:
     rutu = from_ru_to_tu_translator.translate(t)
     turu = from_tu_to_ru_translator.translate(t)
 
+    if Current_mode == 0:
+        voice(turu, Current_mode)
+    if Current_mode == 1:
+        voice(rutu, Current_mode)
+
     switcher = {
-        0: f'{turu}\n\n{from_tu_to_ru_translator.translate(turu)} (tr)',
-        1: f'{rutu}\n\n{from_tu_to_ru_translator.translate(rutu)} (ru)',
+        0: f'{turu}',
+        1: f'{rutu}',
         2: f'{rutu} (ru-tr)\n\n{turu} (tr-ru)'
     }
+
     update.message.reply_text(switcher.get(Current_mode))
+
+    with open(filename, 'rb') as f:
+        update.message.reply_voice(f, caption='озвучка')
 
 
 def set_base_turk(update: Update, context: CallbackContext) -> None:
