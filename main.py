@@ -4,14 +4,13 @@
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-import logging
-
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-from translate import Translator
-import config
-
+from googletrans import Translator
 from gtts import gTTS
+
+import config
+import logging
 
 # Enable logging
 logging.basicConfig(
@@ -22,11 +21,11 @@ logger = logging.getLogger(__name__)
 
 # Define a few command handlers. These usually take the two arguments update and
 # context.
-help_msg = f'/multi - установить мультрежим русский-турецкий ' \
+help_msg = f'/multi - установить мультрежим русский-турецкий \n' \
            f'(P.S. иногда перевод языка A->A может приводить к неожиданным результатам)\n' \
-           f'/tr - установить переводчик с турецкого на русский ' \
+           f'/tr - установить переводчик с турецкого на русский\n' \
            f'/ru - установить переводчик с русского на турецкий\n' \
-           f'/help - справка'
+           f'/help - справка\n'
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -40,36 +39,36 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 def help(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /help is issued."""
     update.message.reply_text(help_msg)
 
 
-from_tu_to_ru_translator = Translator(to_lang='ru', from_lang='tr')
-from_ru_to_tu_translator = Translator(to_lang='tr', from_lang='ru')
+translator = Translator()
 
-# 0 - tr-ru, 1 - ru-tr, 2 - multi
+# 0 = ru-tr, 1 = tr-ru
 Current_mode = 0
 Multi = False
 
 
-def switchLang(mode):
-    if mode == 0:
+def switch_dest():
+    if Current_mode == 0:
         return 'tr'
 
     return 'ru'
 
 
-def switch_translator(mode):
-    if mode == 0:
-        return from_ru_to_tu_translator
+def switch_src():
+    if Current_mode == 0:
+        return 'ru'
 
-    return from_tu_to_ru_translator
+    return 'tr'
 
 
 filename = 'voice2.ogg'
 
 
 def voice(text):
-    tts = gTTS(text, lang=switchLang(Current_mode))
+    tts = gTTS(text, lang=switch_dest())
     tts.save(filename)
 
 
@@ -78,25 +77,19 @@ def voice_lang(text, lang='tr'):
     tts.save(filename)
 
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-# 0 - rus
-# 1 - tur
-# 2 - multi
-
 ru_lang = 'ru'
 en_lang = 'en'
 
 
-def translate_text(text=''):
-    return switch_translator(Current_mode).translate(text)
-
-
 def multi_translate(update: Update):
+    """
+    переводит в обе стороны
+    :param update:
+    """
     text = update.message.text
 
-    rutu = from_ru_to_tu_translator.translate(text)
-    turu = from_tu_to_ru_translator.translate(text)
+    rutu = translator.translate(text, dest='tr').text
+    turu = translator.translate(text, dest='ru').text
 
     # делаем озвучку и отправляем ее
     voice_lang(rutu, 'tr')
@@ -111,13 +104,16 @@ def multi_translate(update: Update):
         update.message.reply_voice(f, caption=turu)
 
 
+# Define a few command handlers. These usually take the two arguments update and
+# context.
+
 def translate(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /turkish"""
     if Multi:
         multi_translate(update)
         return
 
-    res = translate_text(update.message.text)
+    res = translator.translate(update.message.text, switch_dest(), switch_src()).text
 
     # делаем озвучку и отправляем ее
     voice(res)
