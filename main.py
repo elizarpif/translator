@@ -2,15 +2,15 @@
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-from telegram import Update, ForceReply
+from telegram import Update, ForceReply, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-from googletrans import Translator
-from gtts import gTTS
 
 import config
 import logging
+import translator
+import html
+import json
+import traceback
 
 # Enable logging
 logging.basicConfig(
@@ -19,8 +19,43 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 # Define a few command handlers. These usually take the two arguments update and
 # context.
+
+def translate(update: Update, context: CallbackContext) -> None:
+    """Action on message"""
+    if Multi:
+        translator.multi_translate(update)
+        return
+    translator.translate(update)
+
+
+def set_base_turk(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /try is issued."""
+    global Current_mode
+    Current_mode = 1
+    global Multi
+    Multi = False
+    update.message.reply_text('Set base lang: Turkish')
+
+
+def set_base_ru(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /ru is issued."""
+    global Current_mode
+    Current_mode = 0
+    global Multi
+    Multi = False
+    update.message.reply_text('Set base lang: Russian')
+
+
+def set_base_multi(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /multi is issued."""
+    global Multi
+    Multi = True
+    update.message.reply_text('Set multi mode')
+
+
 help_msg = f'/multi - установить мультрежим русский-турецкий \n' \
            f'(P.S. иногда перевод языка A->A может приводить к неожиданным результатам)\n' \
            f'/tr - установить переводчик с турецкого на русский\n' \
@@ -43,109 +78,30 @@ def help(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(help_msg)
 
 
-translator = Translator()
+def error_handler(update: object, context: CallbackContext) -> None:
+    """Log the error and send a telegram message to notify the developer."""
+    # Log the error before we do anything else, so we can see it even if something breaks.
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
-# 0 = ru-tr, 1 = tr-ru
-Current_mode = 0
-Multi = False
+    # traceback.format_exception returns the usual python message about an exception, but as a
+    # list of strings rather than a single string, so we have to join them together.
+    tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
+    tb_string = ''.join(tb_list)
 
+    # Build the message with some markup and additional information about what happened.
+    # You might need to add some logic to deal with messages longer than the 4096 character limit.
+    update_str = update.to_dict() if isinstance(update, Update) else str(update)
+    message = (
+        f'An exception was raised while handling an update\n'
+        f'<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}'
+        '</pre>\n\n'
+        f'<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n'
+        f'<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n'
+        f'<pre>{html.escape(tb_string)}</pre>'
+    )
 
-def switch_dest():
-    if Current_mode == 0:
-        return 'tr'
-
-    return 'ru'
-
-
-def switch_src():
-    if Current_mode == 0:
-        return 'ru'
-
-    return 'tr'
-
-
-filename = 'voice2.ogg'
-
-
-def voice(text):
-    tts = gTTS(text, lang=switch_dest())
-    tts.save(filename)
-
-
-def voice_lang(text, lang='tr'):
-    tts = gTTS(text, lang=lang)
-    tts.save(filename)
-
-
-ru_lang = 'ru'
-en_lang = 'en'
-
-
-def multi_translate(update: Update):
-    """
-    переводит в обе стороны
-    :param update:
-    """
-    text = update.message.text
-
-    rutu = translator.translate(text, dest='tr').text
-    turu = translator.translate(text, dest='ru').text
-
-    # делаем озвучку и отправляем ее
-    voice_lang(rutu, 'tr')
-    with open(filename, 'rb') as f:
-        # отправляем
-        update.message.reply_voice(f, caption=rutu)
-
-    # делаем озвучку и отправляем ее
-    voice_lang(turu, 'ru')
-    with open(filename, 'rb') as f:
-        # отправляем
-        update.message.reply_voice(f, caption=turu)
-
-
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-
-def translate(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /turkish"""
-    if Multi:
-        multi_translate(update)
-        return
-
-    res = translator.translate(update.message.text, switch_dest(), switch_src()).text
-
-    # делаем озвучку и отправляем ее
-    voice(res)
-
-    with open(filename, 'rb') as f:
-        # отправляем
-        update.message.reply_voice(f, caption=res)
-
-
-def set_base_turk(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    global Current_mode
-    Current_mode = 1
-    global Multi
-    Multi = False
-    update.message.reply_text('Set base lang: Turkish')
-
-
-def set_base_ru(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    global Current_mode
-    Current_mode = 0
-    global Multi
-    Multi = False
-    update.message.reply_text('Set base lang: Russian')
-
-
-def set_base_multi(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    global Multi
-    Multi = True
-    update.message.reply_text('Set multi mode')
+    # Finally, send the message
+    context.bot.send_message(chat_id=config.DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
 
 
 def main() -> None:
@@ -163,7 +119,10 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("multi", set_base_multi))
     dispatcher.add_handler(CommandHandler("help", help))
 
-    # on non command i.e message - echo the message on Telegram
+    # add error handler
+    dispatcher.add_error_handler(error_handler)
+
+    # Message handler
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, translate))
 
     # Start the Bot
