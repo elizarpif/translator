@@ -9,6 +9,25 @@ Current_mode = 0
 Multi = False
 
 
+def set_ru():
+    global Current_mode
+    Current_mode = 0
+    global Multi
+    Multi = False
+
+
+def set_tr():
+    global Current_mode
+    Current_mode = 1
+    global Multi
+    Multi = False
+
+
+def set_multi():
+    global Multi
+    Multi = True
+
+
 def switch_dest():
     if Current_mode == 0:
         return 'tr'
