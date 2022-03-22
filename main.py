@@ -107,7 +107,7 @@ def error_handler(update: object, context: CallbackContext) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(config.token)
+    updater = Updater(config.TOKEN)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher

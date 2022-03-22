@@ -40,6 +40,7 @@ ru_lang = 'ru'
 en_lang = 'en'
 
 
+# multi_translate translates in Multi mode, when we dont know what language
 def multi_translate(update: Update):
     """
     переводит в обе стороны
@@ -63,6 +64,7 @@ def multi_translate(update: Update):
         update.message.reply_voice(f, caption=turu)
 
 
+# translate in usual mode (Ru->Tr or Tr->Ru)
 def translate(update: Update):
     res = translator.translate(update.message.text, switch_dest(), switch_src()).text
 
