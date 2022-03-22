@@ -8,10 +8,14 @@ you can find it in telegram by searching @trylizabot
 
 
 ### Config
-Config contains
+Config contains:
 ```python
 # your TOKEN
 TOKEN = 'YOUR_TOKEN'
 # your DEVELOPER_CHAT_ID
-DEVELOPER_CHAT_ID = -123 
+DEVELOPER_CHAT_ID = 123 
 ```
+
+You can find your token from @BotFather
+
+You can find your chat_id by searching @RawDataBot

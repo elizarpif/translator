@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def translate(update: Update, context: CallbackContext) -> None:
     """Action on message"""
-    if Multi:
+    if translator.Multi:
         translator.multi_translate(update)
         return
     translator.translate(update)
@@ -33,26 +33,19 @@ def translate(update: Update, context: CallbackContext) -> None:
 
 def set_base_turk(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /try is issued."""
-    global Current_mode
-    Current_mode = 1
-    global Multi
-    Multi = False
+    translator.set_tr()
     update.message.reply_text('Set base lang: Turkish')
 
 
 def set_base_ru(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /ru is issued."""
-    global Current_mode
-    Current_mode = 0
-    global Multi
-    Multi = False
+    translator.set_ru()
     update.message.reply_text('Set base lang: Russian')
 
 
 def set_base_multi(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /multi is issued."""
-    global Multi
-    Multi = True
+    translator.set_multi()
     update.message.reply_text('Set multi mode')
 
 
