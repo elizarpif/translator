@@ -6,7 +6,13 @@ you can find it in telegram by searching @trylizabot
 ### Screens
 ![Text encryption ](https://github.com/elizarpif/translator/blob/develop/images/screen.png)
 
-
+### Requirements
+To start bot on the server you need:
+```shell
+source env/bin/activate
+# start demon
+python main.pu & 
+```
 ### Config
 Config contains:
 ```python
