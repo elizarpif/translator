@@ -1,5 +1,5 @@
 ## translator
-telegram bot for translations (tr-ru)
+telegram bot for translations (currently added English, Serbian, Russian)
 
 you can find it in telegram by searching @trylizabot
 
