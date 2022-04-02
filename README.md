@@ -20,6 +20,8 @@ Config contains:
 TOKEN = 'YOUR_TOKEN'
 # your DEVELOPER_CHAT_ID
 DEVELOPER_CHAT_ID = 123 
+# tour filename for audio
+FILENAME = 'voice.ogg'
 ```
 
 You can find your token from @BotFather
