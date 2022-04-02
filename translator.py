@@ -21,6 +21,16 @@ class Language:
             'en': 'English',
             'sr': 'Serbian',
         }
+        self.from_ru = True
+
+    def is_from_ru(self):
+        return self.from_ru
+
+    def set_from_ru(self):
+        self.from_ru = True
+
+    def set_to_ru(self):
+        self.from_ru = False
 
     def set_foreign(self, lang='tr'):
         self.current_foreign_lang = lang
@@ -44,27 +54,8 @@ class Language:
         self.multi = False
 
 
-def set_base():
-    global Current_mode
-    Current_mode = 0
-    global Multi
-    Multi = False
-
-
-def set_foreign():
-    global Current_mode
-    Current_mode = 1
-    global Multi
-    Multi = False
-
-
-def set_multi():
-    global Multi
-    Multi = True
-
-
-def voice(text, lang: Language):
-    tts = gTTS(text, lang=lang.get_foreign())
+def voice(text, lang='tr'):
+    tts = gTTS(text, lang=lang)
     tts.save(config.FILENAME)
 
 
@@ -102,10 +93,16 @@ def multi_translate(update: Update, lang: Language):
 
 # translate in usual mode (Ru->Tr or Tr->Ru)
 def translate(update: Update, lang: Language):
-    res = translator.translate(update.message.text, dest=lang.get_foreign(), src=lang.get_base()).text
+    foreign = lang.get_foreign()
+    base = lang.get_base()
+
+    if not lang.is_from_ru():
+        foreign, base = base, foreign
+
+    res = translator.translate(update.message.text, dest=foreign, src=base).text
 
     # делаем озвучку и отправляем ее
-    voice(res, lang=lang)
+    voice(res, lang=foreign)
 
     with open(config.FILENAME, 'rb') as f:
         # отправляем

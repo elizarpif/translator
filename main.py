@@ -24,8 +24,8 @@ class Bot:
     def __init__(self):
         self.lang = translator.Language()
         self.help_msg = f'/multi - установить мультрежим \n' \
-                        f'/foreign - установить переводчик с иностранного на русский\n' \
-                        f'/ru - установить переводчик с русского на иностранный\n' \
+                        f'/to-ru - установить переводчик с иностранного на русский\n' \
+                        f'/from-ru - установить переводчик с русского на иностранный\n' \
                         f'/help - справка\n'
 
     def translate(self, update: Update, context: CallbackContext) -> None:
@@ -36,15 +36,15 @@ class Bot:
         translator.translate(update, self.lang)
 
     def set_base_foreign(self, update: Update, context: CallbackContext) -> None:
-        """Send a message when the command /foreign is issued."""
-        self.lang.set_base(lang='ru')
+        """Send a message when the command /to-ru is issued."""
+        self.lang.set_to_ru()
         self.lang.disable_multi_mode()
 
         update.message.reply_text(f'Set base lang: {self.lang.get_foreign_string()}')
 
     def set_base_ru(self, update: Update, context: CallbackContext) -> None:
-        """Send a message when the command /ru is issued."""
-        self.lang.set_base(lang='ru')
+        """Send a message when the command /from-ru is issued."""
+        self.lang.set_from_ru()
         self.lang.disable_multi_mode()
 
         update.message.reply_text('Set base lang: Russian')
@@ -52,6 +52,7 @@ class Bot:
     def set_base_multi(self, update: Update, context: CallbackContext) -> None:
         """Send a message when the command /multi is issued."""
         self.lang.enable_multi_mode()
+        self.lang.set_from_ru()
 
         update.message.reply_text('Set multi mode')
 
@@ -143,8 +144,8 @@ def main() -> None:
 
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", bot.start))
-    dispatcher.add_handler(CommandHandler("foreign", bot.set_base_foreign))
-    dispatcher.add_handler(CommandHandler("ru", bot.set_base_ru))
+    dispatcher.add_handler(CommandHandler("to_ru", bot.set_base_foreign))
+    dispatcher.add_handler(CommandHandler("from_ru", bot.set_base_ru))
     dispatcher.add_handler(CommandHandler("multi", bot.set_base_multi))
     dispatcher.add_handler(CommandHandler("help", bot.help))
 
