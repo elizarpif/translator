@@ -24,8 +24,9 @@ class Bot:
     def __init__(self):
         self.lang = translator.Language()
         self.help_msg = f'/multi - установить мультрежим \n' \
-                        f'/to-ru - установить переводчик с иностранного на русский\n' \
-                        f'/from-ru - установить переводчик с русского на иностранный\n' \
+                        f'/to_ru - установить переводчик с иностранного на русский\n' \
+                        f'/from_ru - установить переводчик с русского на иностранный\n' \
+                        f'/settings - настройка текущего инностранного языка\n' \
                         f'/help - справка\n'
 
     def translate(self, update: Update, context: CallbackContext) -> None:
