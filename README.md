@@ -1,7 +1,7 @@
 ## translator
 telegram bot for translations (currently added English, Serbian, Russian)
 
-you can find it in telegram by searching @trylizabot
+you can find it in telegram by searching @trylizabot (it is not working now, beause I dont need translator, so I stopped payment for server)
 
 ### Screens
 ![Text encryption ](https://github.com/elizarpif/translator/blob/develop/images/screen.png)
